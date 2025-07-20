@@ -7,10 +7,10 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    configureAdministration()
-    configureSockets()
+//    configureAdministration()
+//    configureSockets()
 //    configureFrameworks()
-    configureSerialization()
+//    configureSerialization()
 //    configureDatabases()
 //    configureMonitoring()
 //    configureTemplating()
