@@ -8,15 +8,13 @@ plugins {
 group = "org.ktorite"
 version = "0.0.1"
 
-application {
-    mainClass = "io.ktor.server.netty.EngineMain"
-}
-
 repositories {
     mavenCentral()
     maven { url = uri("https://packages.confluent.io/maven/") }
 }
-
+kotlin {
+    jvmToolchain(17)
+}
 dependencies {
     implementation(libs.ktor.server.task.scheduling.core)
     implementation(libs.ktor.server.task.scheduling.redis)
