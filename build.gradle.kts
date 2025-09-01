@@ -3,10 +3,11 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.plugin.serialization)
+    id("maven-publish")
 }
 
 group = "org.ktorite"
-version = "0.0.1"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
@@ -15,6 +16,17 @@ repositories {
 kotlin {
     jvmToolchain(17)
 }
+publishing {
+    publications {
+        create<MavenPublication>("core") {
+            from(components["java"])
+            groupId = "com.github.ktorite"
+            artifactId = "ktorite"
+            version = "0.1.0"
+        }
+    }
+}
+
 dependencies {
     implementation(libs.ktor.server.task.scheduling.core)
     implementation(libs.ktor.server.task.scheduling.redis)
