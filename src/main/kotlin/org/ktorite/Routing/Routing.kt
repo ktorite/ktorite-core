@@ -1,4 +1,4 @@
-package org.ktorite.plugins
+package org.ktorite.Routing
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -19,8 +19,7 @@ data class WebSocketConfig(
     val masking: Boolean = false
 )
 
-fun Application.ktoriteRoute(
-    devel: Boolean = false,
+fun Application.installRoutes(
     enableWebSocket: Boolean = false,
     webSocketConfig: WebSocketConfig? = null,
     routes: Route.() -> Unit
@@ -35,12 +34,6 @@ fun Application.ktoriteRoute(
     }
 
     routing {
-        if (devel) {
-            get("/admin") {
-                call.respondText("Welcome to admin panel")
-            }
-        }
-
         routes()
     }
 }
