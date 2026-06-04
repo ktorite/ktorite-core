@@ -9,8 +9,8 @@ import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.pingPeriod
 import io.ktor.server.websocket.timeout
-import korlibs.time.seconds
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class WebSocketConfig(
     val pingPeriod: Duration = 15.seconds,

@@ -28,7 +28,7 @@ fun Application.module(config: KtoriteConfig) {
     }
     installRoutes(false){
         config.routes.forEach { routeDef ->
-            this.routeDef()
+            routeDef()
         }
     }
 }
