@@ -8,6 +8,8 @@ class KtoriteConfig {
     var port: Int = 8080
     var enableAdmin: Boolean = false
     var dbConfig: DbConfig? = null
+    var authConfig: AuthConfig? = null
+    var securityConfig: SecurityConfig? = null
 
     internal val routes = mutableListOf<Route.() -> Unit>()
     internal val webSocketConfigs = mutableListOf<Route.() -> Unit>()
@@ -27,5 +29,13 @@ class KtoriteConfig {
 
     fun registerModels(vararg tables: Table) {
         models += tables
+    }
+
+    fun auth(block: AuthConfig.() -> Unit) {
+        authConfig = AuthConfig().apply(block)
+    }
+
+    fun security(block: SecurityConfig.() -> Unit) {
+        securityConfig = SecurityConfig().apply(block)
     }
 }
