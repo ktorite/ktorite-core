@@ -16,7 +16,7 @@ class DbConfig {
     var idleTimeout: Long = 600_000
 }
 
-fun Application.installDatabase(config: DbConfig) {
+fun Application.installDatabase(config: DbConfig): Database {
     val hikariConfig = HikariConfig().apply {
         jdbcUrl = config.url
         if (config.driver.isNotBlank()) {
@@ -31,6 +31,7 @@ fun Application.installDatabase(config: DbConfig) {
         validate()
     }
     val dataSource = HikariDataSource(hikariConfig)
-    Database.connect(dataSource)
+    val db = Database.connect(dataSource)
     log.info("Database connected: ${config.url}")
+    return db
 }

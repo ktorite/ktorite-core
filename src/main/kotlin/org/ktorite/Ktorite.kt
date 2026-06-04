@@ -6,6 +6,8 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.statuspages.*
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ktorite.Routing.installRoutes
 import org.ktorite.admin.installAdmin
 import org.ktorite.config.KtoriteConfig
@@ -33,7 +35,12 @@ fun Application.module(config: KtoriteConfig) {
         installAdmin()
     }
     if (config.dbConfig != null) {
-        installDatabase(config.dbConfig!!)
+        val db = installDatabase(config.dbConfig!!)
+        if (config.models.isNotEmpty()) {
+            transaction(db) {
+                SchemaUtils.create(*config.models.toTypedArray())
+            }
+        }
     }
     installRoutes(false){
         config.routes.forEach { routeDef ->

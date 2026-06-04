@@ -1,6 +1,7 @@
 package org.ktorite.config
 
 import io.ktor.server.routing.*
+import org.jetbrains.exposed.v1.core.Table
 import org.ktorite.db.DbConfig
 
 class KtoriteConfig {
@@ -10,6 +11,7 @@ class KtoriteConfig {
 
     internal val routes = mutableListOf<Route.() -> Unit>()
     internal val webSocketConfigs = mutableListOf<Route.() -> Unit>()
+    internal val models = mutableListOf<Table>()
 
     fun routing(block: Route.() -> Unit) {
         routes += block
@@ -21,5 +23,9 @@ class KtoriteConfig {
 
     fun database(block: DbConfig.() -> Unit) {
         dbConfig = DbConfig().apply(block)
+    }
+
+    fun registerModels(vararg tables: Table) {
+        models += tables
     }
 }
