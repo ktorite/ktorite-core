@@ -12,7 +12,9 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.csrf.CSRF
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.hsts.HSTS
+import io.ktor.http.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ktorite.Routing.installRoutes
@@ -36,7 +38,15 @@ fun Application.module(config: KtoriteConfig) {
     configureSerialization()
     install(CallLogging)
     install(DefaultHeaders)
-    install(StatusPages)
+    install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            val msg = (cause.cause?.message ?: cause.message)?.replace("\"", "\\\"") ?: "Internal server error"
+            call.respondText("""{"error":"$msg"}""", ContentType.Application.Json, HttpStatusCode.InternalServerError)
+        }
+        status(HttpStatusCode.NotFound) { call, _ ->
+            call.respondText("""{"error":"Not found"}""", ContentType.Application.Json, HttpStatusCode.NotFound)
+        }
+    }
 
     config.securityConfig?.let { sec ->
         if (sec.corsConfig.hosts.isNotEmpty() || sec.corsConfig.allowSameOrigin) {
@@ -83,6 +93,7 @@ fun Application.module(config: KtoriteConfig) {
 
     val db = if (config.dbConfig != null) {
         installDatabase(config.dbConfig!!).also { database ->
+            config.db = database
             if (config.models.isNotEmpty()) {
                 transaction(database) {
                     SchemaUtils.create(*config.models.toTypedArray())
@@ -90,6 +101,8 @@ fun Application.module(config: KtoriteConfig) {
             }
         }
     } else null
+
+    config.onStart?.invoke()
 
     if (config.enableAdmin && db != null) {
         installAdmin(config.models, db)

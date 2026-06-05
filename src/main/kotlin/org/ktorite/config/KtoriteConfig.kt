@@ -2,6 +2,7 @@ package org.ktorite.config
 
 import io.ktor.server.routing.*
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.ktorite.db.DbConfig
 
 class KtoriteConfig {
@@ -10,6 +11,9 @@ class KtoriteConfig {
     var dbConfig: DbConfig? = null
     var authConfig: AuthConfig? = null
     var securityConfig: SecurityConfig? = null
+    var db: Database? = null
+        internal set
+    var onStart: (() -> Unit)? = null
 
     internal val routes = mutableListOf<Route.() -> Unit>()
     internal val webSocketConfigs = mutableListOf<Route.() -> Unit>()
