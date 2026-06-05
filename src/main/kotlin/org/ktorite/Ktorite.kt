@@ -81,16 +81,18 @@ fun Application.module(config: KtoriteConfig) {
         }
     }
 
-    if (config.enableAdmin) {
-        installAdmin()
-    }
-    if (config.dbConfig != null) {
-        val db = installDatabase(config.dbConfig!!)
-        if (config.models.isNotEmpty()) {
-            transaction(db) {
-                SchemaUtils.create(*config.models.toTypedArray())
+    val db = if (config.dbConfig != null) {
+        installDatabase(config.dbConfig!!).also { database ->
+            if (config.models.isNotEmpty()) {
+                transaction(database) {
+                    SchemaUtils.create(*config.models.toTypedArray())
+                }
             }
         }
+    } else null
+
+    if (config.enableAdmin && db != null) {
+        installAdmin(config.models, db)
     }
     installRoutes(false){
         config.routes.forEach { routeDef ->

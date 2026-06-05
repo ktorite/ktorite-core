@@ -6,7 +6,7 @@ import io.ktor.server.application.*
 import org.jetbrains.exposed.v1.jdbc.Database
 
 class DbConfig {
-    var url: String = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
+    var url: String = "jdbc:h2:file:./data/db;DB_CLOSE_DELAY=-1"
     var driver: String = ""
     var username: String = "sa"
     var password: String = ""
