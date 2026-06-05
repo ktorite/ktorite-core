@@ -44,6 +44,7 @@ dependencies {
     api(libs.ktor.serialization.kotlinx.json)
     api(libs.ktor.server.content.negotiation)
     api(libs.hikaricp)
+    api(libs.bcrypt)
     api(libs.postgresql)
     api(libs.h2)
     api(libs.mongodb.driver.core)

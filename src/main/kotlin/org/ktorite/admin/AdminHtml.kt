@@ -14,6 +14,22 @@ internal fun formatDbError(e: Exception): String {
   }
 }
 
+private fun h(value: Any?): String =
+  value?.toString()
+    ?.replace("&", "&amp;")
+    ?.replace("<", "&lt;")
+    ?.replace(">", "&gt;")
+    ?.replace("\"", "&quot;")
+    ?.replace("'", "&#x27;") ?: ""
+
+private fun attr(value: Any?): String =
+  value?.toString()
+    ?.replace("&", "&amp;")
+    ?.replace("<", "&lt;")
+    ?.replace(">", "&gt;")
+    ?.replace("\"", "&quot;")
+    ?.replace("'", "&#x27;") ?: ""
+
 private const val STYLE =
         """
 <style>
@@ -50,16 +66,17 @@ private fun page(
     for (crumb in breadcrumbs) {
       append(" › ")
       if (crumb.second != null) {
-        append("<a href='${crumb.second}'>${crumb.first}</a>")
+        append("<a href='${crumb.second}'>${h(crumb.first)}</a>")
       } else {
-        append("<span>${crumb.first}</span>")
+        append("<span>${h(crumb.first)}</span>")
       }
     }
     append("</nav>")
   }
+  val safeTitle = h(title)
   return """<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><title>$title</title>$STYLE</head>
-<body>$nav<h1>$title</h1>$body</body></html>"""
+<html lang="en"><head><meta charset="utf-8"><title>$safeTitle</title>$STYLE</head>
+<body>$nav<h1>$safeTitle</h1>$body</body></html>"""
 }
 
 internal fun adminIndexPage(models: List<Table>): String =
@@ -70,7 +87,7 @@ internal fun adminIndexPage(models: List<Table>): String =
                   appendLine("<ul>")
                   models.forEach { t ->
                     appendLine(
-                            "<li><a href='/admin/${t.tableName.lowercase()}'>${t.tableName}</a></li>"
+                            "<li><a href='/admin/${t.tableName.lowercase()}'>${h(t.tableName)}</a></li>"
                     )
                   }
                   appendLine("</ul>")
@@ -84,14 +101,14 @@ internal fun adminListPage(table: Table, rows: List<ResultRow>): String {
   val body = buildString {
     appendLine("<a href='/admin/$name/new' class='btn btn-primary'>+ New</a>")
     appendLine("<table><thead><tr>")
-    cols.forEach { appendLine("<th>${it.name}</th>") }
+    cols.forEach { appendLine("<th>${h(it.name)}</th>") }
     appendLine("<th>Actions</th></tr></thead><tbody>")
     for (row in rows) {
       val pkVal = row[pkCol(table)]
       appendLine("<tr>")
       for (col in cols) {
         val v = row[col]
-        appendLine("<td>${v ?: ""}</td>")
+        appendLine("<td>${h(v)}</td>")
       }
       appendLine("<td>")
       appendLine("<a href='/admin/$name/$pkVal' class='btn btn-sm'>View</a> ")
@@ -104,7 +121,7 @@ internal fun adminListPage(table: Table, rows: List<ResultRow>): String {
     }
     appendLine("</tbody></table>")
   }
-  return page("${table.tableName} — Admin", body, crumbs)
+  return page("${h(table.tableName)} — Admin", body, crumbs)
 }
 
 internal fun adminDetailPage(table: Table, row: ResultRow): String {
@@ -115,7 +132,7 @@ internal fun adminDetailPage(table: Table, row: ResultRow): String {
     appendLine("<table>")
     for (col in table.columns) {
       val v = row[col]
-      appendLine("<tr><th>${col.name}</th><td>${v ?: ""}</td></tr>")
+      appendLine("<tr><th>${h(col.name)}</th><td>${h(v)}</td></tr>")
     }
     appendLine("</table>")
     appendLine("<div class='actions'>")
@@ -123,14 +140,15 @@ internal fun adminDetailPage(table: Table, row: ResultRow): String {
     appendLine("<a href='/admin/$name' class='btn'>Back</a>")
     appendLine("</div>")
   }
-  return page("${table.tableName} — Detail", body, crumbs)
+  return page("${h(table.tableName)} — Detail", body, crumbs)
 }
 
 internal fun adminFormPage(
         table: Table,
         existing: ResultRow?,
         params: Parameters? = null,
-        error: String? = null
+        error: String? = null,
+        csrfToken: String? = null
 ): String {
   val name = table.tableName.lowercase()
   val isEdit = existing != null
@@ -141,9 +159,12 @@ internal fun adminFormPage(
 
   val body = buildString {
     if (error != null) {
-      appendLine("<div class='alert alert-danger'>$error</div>")
+      appendLine("<div class='alert alert-danger'>${h(error)}</div>")
     }
     appendLine("<form method='post' action='$action'>")
+    if (csrfToken != null) {
+      appendLine("<input type='hidden' name='csrf_token' value='${attr(csrfToken)}'>")
+    }
     for (col in table.columns) {
       if (col.columnType is AutoIncColumnType<*> && !isEdit) continue
       val value =
@@ -152,7 +173,7 @@ internal fun adminFormPage(
                 else -> existing?.get(col)
               }
       val readonly = isEdit && col == pkCol
-      appendLine("<label>${col.name}</label>")
+      appendLine("<label>${h(col.name)}</label>")
       appendLine(inputField(col, value, readonly))
     }
     appendLine("<div class='actions'>")
@@ -171,7 +192,7 @@ internal fun adminFormPage(
 
 internal fun inputField(col: Column<*>, value: Any?, readonly: Boolean): String {
   val inputName = col.name
-  val strValue = value?.toString() ?: ""
+  val strValue = attr(value)
   val ro = if (readonly) "readonly" else ""
   return when (col.columnType) {
     is BooleanColumnType -> {

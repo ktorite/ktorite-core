@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.calllogging.*
@@ -19,6 +20,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ktorite.Routing.installRoutes
 import org.ktorite.admin.installAdmin
+import org.ktorite.auth.installSessionAuth
 import org.ktorite.config.KtoriteConfig
 import org.ktorite.db.installDatabase
 import org.ktorite.plugins.configureSerialization
@@ -49,6 +51,13 @@ fun Application.module(config: KtoriteConfig) {
     }
 
     config.securityConfig?.let { sec ->
+        if (sec.csrfConfig.disabled != true) {
+            install(CSRF) {
+                sec.csrfConfig.allowedOrigins.forEach { allowOrigin(it) }
+                sec.csrfConfig.headerChecks.forEach { checkHeader(it.name) }
+                if (sec.csrfConfig.originMatchesHost) originMatchesHost()
+            }
+        }
         if (sec.corsConfig.hosts.isNotEmpty() || sec.corsConfig.allowSameOrigin) {
             install(CORS) {
                 sec.corsConfig.hosts.forEach { entry ->
@@ -66,28 +75,14 @@ fun Application.module(config: KtoriteConfig) {
             includeSubDomains = sec.hstsConfig.includeSubDomains
             preload = sec.hstsConfig.preload
         }
-        install(CSRF) {
-            sec.csrfConfig.allowedOrigins.forEach { allowOrigin(it) }
-            sec.csrfConfig.headerChecks.forEach { checkHeader(it.name) }
-            if (sec.csrfConfig.originMatchesHost) originMatchesHost()
-        }
     }
 
-    config.authConfig?.let { authCfg ->
-        authCfg.jwtConfig?.let { jwtCfg ->
-            install(Authentication) {
-                jwt("jwt") {
-                    realm = jwtCfg.realm
-                    verifier(
-                        JWT.require(Algorithm.HMAC256(jwtCfg.secret))
-                            .withIssuer(jwtCfg.issuer)
-                            .build()
-                    )
-                    validate { credential ->
-                        jwtCfg.validate(this, credential)
-                    }
-                }
-            }
+    config.authConfig?.sessionConfig?.let { sessionCfg ->
+        require(sessionCfg.secret != "change-me") {
+            "Session auth secret must be configured. Set a secure random string via: auth { session { secret = \"...\" } }"
+        }
+        if (!config.models.any { it is org.ktorite.auth.UserTable }) {
+            config.models.add(0, org.ktorite.auth.UserTable)
         }
     }
 
@@ -104,12 +99,56 @@ fun Application.module(config: KtoriteConfig) {
 
     config.onStart?.invoke()
 
-    if (config.enableAdmin && db != null) {
-        installAdmin(config.models, db)
+    if (config.authConfig?.sessionConfig != null && db != null) {
+        installSessionAuth(config.authConfig!!.sessionConfig!!, db!!)
     }
-    installRoutes(false){
-        config.routes.forEach { routeDef ->
-            routeDef()
+
+    install(Authentication) {
+        config.authConfig?.jwtConfig?.let { jwtCfg ->
+            require(jwtCfg.secret.isNotBlank()) {
+                "JWT secret must be set. Configure it via: auth { jwt { secret = \"your-secret\" } }"
+            }
+            jwt("jwt") {
+                realm = jwtCfg.realm
+                verifier(
+                    JWT.require(Algorithm.HMAC256(jwtCfg.secret))
+                        .withIssuer(jwtCfg.issuer)
+                        .build()
+                )
+                validate { credential ->
+                    jwtCfg.validate(this, credential)
+                }
+            }
         }
+        val adminAuthEnabled = config.adminUsername != null && config.adminPassword != null
+        if (adminAuthEnabled) {
+            basic("admin-basic") {
+                validate { credentials ->
+                    if (credentials.name == config.adminUsername && credentials.password == config.adminPassword) {
+                        UserIdPrincipal(credentials.name)
+                    } else null
+                }
+                realm = "Ktorite Admin"
+            }
+        }
+        config.authConfig?.sessionConfig?.let {
+            session<org.ktorite.auth.UserSession>("session") {
+                validate { session ->
+                    session?.let { UserIdPrincipal(it.username) }
+                }
+            }
+        }
+    }
+
+    routing {
+        if (config.enableAdmin && db != null) {
+            val adminAuth = config.adminUsername != null && config.adminPassword != null
+            if (adminAuth) {
+                authenticate("admin-basic") { installAdmin(config.models, db) }
+            } else {
+                installAdmin(config.models, db)
+            }
+        }
+        config.routes.forEach { it() }
     }
 }

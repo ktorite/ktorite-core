@@ -42,6 +42,7 @@ class HstsConfig {
 }
 
 class CsrfConfig {
+    var disabled: Boolean = false
     internal val allowedOrigins = mutableListOf<String>()
     internal val headerChecks = mutableListOf<CsrfHeaderCheck>()
     var originMatchesHost: Boolean = false
