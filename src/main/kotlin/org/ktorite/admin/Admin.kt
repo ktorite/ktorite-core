@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ktorite.error.formatDbError
+import org.ktorite.pagination.paginate
 import java.util.UUID
 
 private fun csrfToken(): String = UUID.randomUUID().toString()
@@ -39,8 +40,10 @@ fun Route.installAdmin(models: List<Table>, db: Database) {
     val tbl = table
 
     get("/admin/$name") {
-      val rows = transaction(db) { tbl.selectAll().toList() }
-      call.respondText(adminListPage(tbl, rows), ContentType.Text.Html)
+      val p = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
+      val pp = call.request.queryParameters["per_page"]?.toIntOrNull() ?: 20
+      val paged = transaction(db) { tbl.selectAll().paginate(p, pp) }
+      call.respondText(adminListPage(tbl, paged), ContentType.Text.Html)
     }
 
     get("/admin/$name/new") {

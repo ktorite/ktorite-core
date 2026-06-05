@@ -3,6 +3,7 @@ package org.ktorite.admin
 import io.ktor.http.Parameters
 import io.ktor.server.request.*
 import org.jetbrains.exposed.v1.core.*
+import org.ktorite.pagination.Page
 
 private fun h(value: Any?): String =
   value?.toString()
@@ -84,9 +85,10 @@ internal fun adminIndexPage(models: List<Table>): String =
                 }
         )
 
-internal fun adminListPage(table: Table, rows: List<ResultRow>): String {
+internal fun adminListPage(table: Table, paged: Page<ResultRow>): String {
   val name = table.tableName.lowercase()
   val cols = table.columns
+  val rows = paged.items
   val crumbs = listOf(name to "/admin/$name")
   val body = buildString {
     appendLine("<a href='/admin/$name/new' class='btn btn-primary'>+ New</a>")
@@ -110,6 +112,17 @@ internal fun adminListPage(table: Table, rows: List<ResultRow>): String {
       appendLine("</form></td></tr>")
     }
     appendLine("</tbody></table>")
+    if (paged.totalPages > 1) {
+      appendLine("<div class='pagination' style='margin-top:1rem;display:flex;gap:0.5rem;align-items:center;'>")
+      appendLine("<span>Page ${paged.page} of ${paged.totalPages} (${paged.total} total)</span>")
+      if (paged.hasPrevious) {
+        appendLine("<a href='/admin/$name?page=${paged.previousPageNumber}&per_page=${paged.perPage}' class='btn btn-sm'>Previous</a>")
+      }
+      if (paged.hasNext) {
+        appendLine("<a href='/admin/$name?page=${paged.nextPageNumber}&per_page=${paged.perPage}' class='btn btn-sm btn-primary'>Next</a>")
+      }
+      appendLine("</div>")
+    }
   }
   return page("${h(table.tableName)} — Admin", body, crumbs)
 }
