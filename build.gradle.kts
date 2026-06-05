@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.ktorite"
-version = "0.1.0"
+version = "1.0.0"
 
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     enabled = false
@@ -27,7 +27,7 @@ publishing {
             from(components["java"])
             groupId = "com.github.ktorite"
             artifactId = "ktorite"
-            version = "0.1.0"
+            version = "1.0.0"
         }
     }
 }
