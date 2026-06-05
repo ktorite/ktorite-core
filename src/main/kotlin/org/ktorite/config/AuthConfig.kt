@@ -2,6 +2,7 @@ package org.ktorite.config
 
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.jwt.JWTCredential
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.routing.Route
 import org.jetbrains.exposed.v1.core.Table
 import kotlin.time.Duration
@@ -28,7 +29,7 @@ class JwtAuthConfig {
         }
     var issuer: String = "ktorite"
     var realm: String = "ktorite"
-    var validate: suspend (ApplicationCall, JWTCredential) -> Any? = { _, credential -> credential.payload }
+    var validate: suspend (ApplicationCall, JWTCredential) -> Any? = { _, credential -> JWTPrincipal(credential.payload) }
 }
 
 class SessionAuthConfig {
