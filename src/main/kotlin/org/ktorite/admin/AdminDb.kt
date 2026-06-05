@@ -29,8 +29,7 @@ internal fun findByPk(table: Table, id: String): ResultRow? {
 
 internal fun doInsert(table: Table, params: Parameters) {
     table.insert { row ->
-        for (col in table.columns) {
-            if (col.columnType is AutoIncColumnType<*>) continue
+        for (col in table.writableColumns) {
             val raw = params[col.name]
             if (raw != null) {
                 val v = parseValue(col, raw) ?: continue
@@ -44,8 +43,7 @@ internal fun doUpdate(table: Table, id: String, params: Parameters) {
     val col = pkCol(table)
     val pk = parseValue(col, id) ?: return
     table.update(where = { col eqLiteral pk }, limit = null) { row ->
-        for (c in table.columns) {
-            if (c.columnType is AutoIncColumnType<*>) continue
+        for (c in table.writableColumns) {
             if (c == col) continue
             val raw = params[c.name]
             if (raw != null) {
