@@ -13,6 +13,7 @@ class KtoriteConfig {
     var dbConfig: DbConfig? = null
     var authConfig: AuthConfig? = null
     var securityConfig: SecurityConfig? = null
+    val errorConfig: ErrorConfig = ErrorConfig()
     var db: Database? = null
         internal set
     var onStart: (() -> Unit)? = null
@@ -43,5 +44,9 @@ class KtoriteConfig {
 
     fun security(block: SecurityConfig.() -> Unit) {
         securityConfig = SecurityConfig().apply(block)
+    }
+
+    fun error(block: ErrorConfig.() -> Unit) {
+        errorConfig.apply(block)
     }
 }

@@ -14,7 +14,6 @@ import io.ktor.server.plugins.csrf.CSRF
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.http.*
-import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -23,6 +22,7 @@ import org.ktorite.admin.installAdmin
 import org.ktorite.auth.installSessionAuth
 import org.ktorite.config.KtoriteConfig
 import org.ktorite.db.installDatabase
+import org.ktorite.error.installErrorHandler
 import org.ktorite.plugins.configureSerialization
 
 
@@ -40,15 +40,7 @@ fun Application.module(config: KtoriteConfig) {
     configureSerialization()
     install(CallLogging)
     install(DefaultHeaders)
-    install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            val msg = (cause.cause?.message ?: cause.message)?.replace("\"", "\\\"") ?: "Internal server error"
-            call.respondText("""{"error":"$msg"}""", ContentType.Application.Json, HttpStatusCode.InternalServerError)
-        }
-        status(HttpStatusCode.NotFound) { call, _ ->
-            call.respondText("""{"error":"Not found"}""", ContentType.Application.Json, HttpStatusCode.NotFound)
-        }
-    }
+    installErrorHandler(config.errorConfig)
 
     config.securityConfig?.let { sec ->
         if (sec.csrfConfig.disabled != true) {
