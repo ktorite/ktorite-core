@@ -3,7 +3,9 @@ package org.ktorite.config
 import io.ktor.server.routing.*
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.ktorite.db.DbConfig
+import org.ktorite.migration.Migration
 
 class KtoriteConfig {
     var port: Int = 8080
@@ -21,6 +23,7 @@ class KtoriteConfig {
     internal val routes = mutableListOf<Route.() -> Unit>()
     internal val webSocketConfigs = mutableListOf<Route.() -> Unit>()
     internal val models = mutableListOf<Table>()
+    internal val migrations = mutableListOf<Migration>()
 
     fun routing(block: Route.() -> Unit) {
         routes += block
@@ -36,6 +39,10 @@ class KtoriteConfig {
 
     fun registerModels(vararg tables: Table) {
         models += tables
+    }
+
+    fun migration(name: String, up: JdbcTransaction.() -> Unit) {
+        migrations.add(Migration(name, up))
     }
 
     fun auth(block: AuthConfig.() -> Unit) {

@@ -3,8 +3,8 @@ package org.ktorite.config
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.routing.Route
-import org.jetbrains.exposed.v1.core.Table
+import org.ktorite.auth.DefaultUserTableProvider
+import org.ktorite.auth.UserTableProvider
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
@@ -33,7 +33,7 @@ class JwtAuthConfig {
 }
 
 class SessionAuthConfig {
-    var userTable: Table? = null
+    var userTableProvider: UserTableProvider = DefaultUserTableProvider
     var loginPath: String = "/login"
     var logoutPath: String = "/logout"
     var sessionName: String = "ktorite_session"

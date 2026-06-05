@@ -23,6 +23,7 @@ import org.ktorite.auth.installSessionAuth
 import org.ktorite.config.KtoriteConfig
 import org.ktorite.db.installDatabase
 import org.ktorite.error.installErrorHandler
+import org.ktorite.migration.runMigrations
 import org.ktorite.plugins.configureSerialization
 
 
@@ -73,8 +74,9 @@ fun Application.module(config: KtoriteConfig) {
         require(sessionCfg.secret != "change-me") {
             "Session auth secret must be configured. Set a secure random string via: auth { session { secret = \"...\" } }"
         }
-        if (!config.models.any { it is org.ktorite.auth.UserTable }) {
-            config.models.add(0, org.ktorite.auth.UserTable)
+        val userTable = sessionCfg.userTableProvider.table
+        if (config.models.none { it === userTable }) {
+            config.models.add(0, userTable)
         }
     }
 
@@ -85,6 +87,12 @@ fun Application.module(config: KtoriteConfig) {
                 transaction(database) {
                     SchemaUtils.create(*config.models.toTypedArray())
                 }
+            }
+            if (config.migrations.isNotEmpty()) {
+                transaction(database) {
+                    SchemaUtils.create(org.ktorite.migration.MigrationTable)
+                }
+                runMigrations(database, config.migrations)
             }
         }
     } else null
