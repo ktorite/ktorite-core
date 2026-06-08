@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title th:text="${title}">Admin</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem;
+      background: #eff1f5;
+      color: #4c4f69;
+    }
+
+    nav {
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      color: #6c6f85;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #1e66f5;
+    }
+
+    nav span {
+      color: #4c4f69;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #eff1f5;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid #dce0e8;
+    }
+
+    th {
+      background: #e6e9ef;
+      color: #4c4f69;
+    }
+
+    tr:hover {
+      background: #ccd0da;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .btn-primary {
+      background: #1e66f5;
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: #d20f39;
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    form label {
+      display: block;
+      margin: 0.5rem 0 0.25rem;
+      font-weight: 600;
+      color: #4c4f69;
+    }
+
+    form input,
+    form textarea,
+    form select {
+      width: 100%;
+      padding: 0.4rem;
+      border: 1px solid #bcc0cc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      background: #eff1f5;
+      color: #4c4f69;
+    }
+
+    form input[type=checkbox] {
+      width: auto;
+    }
+
+    form .actions {
+      margin-top: 1rem;
+    }
+
+    .alert {
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+
+    .alert-info {
+      background: #e6e9ef;
+      color: #1e66f5;
+    }
+
+    .alert-danger {
+      background: #e6e9ef;
+      color: #d20f39;
+    }
+
+    .pagination {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="/admin">Home</a>
+    <th:block th:if="${breadcrumbs != null}">
+      <th:block th:each="crumb : ${breadcrumbs}">
+        › <th:block th:if="${crumb.link != null}"><a th:href="${crumb.link}" th:text="${crumb.label}">x</a></th:block>
+        <th:block th:unless="${crumb.link != null}"><span th:text="${crumb.label}">x</span></th:block>
+      </th:block>
+    </th:block>
+  </nav>
+  <h1 th:text="${title}">Title</h1>
+  <th:block th:replace="${content}"></th:block>
+</body>
+
+</html>

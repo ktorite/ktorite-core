@@ -3,6 +3,9 @@ package org.ktorite
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.*
+import io.ktor.server.thymeleaf.Thymeleaf
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver
+import org.thymeleaf.templatemode.TemplateMode
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.routing.*
@@ -15,6 +18,8 @@ import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.http.*
 import io.ktor.server.response.*
+import io.ktor.server.sessions.*
+import io.ktor.server.thymeleaf.ThymeleafContent
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ktorite.Routing.installRoutes
@@ -41,6 +46,14 @@ fun Application.module(config: KtoriteConfig) {
     configureSerialization()
     install(CallLogging)
     install(DefaultHeaders)
+    install(Thymeleaf) {
+        addTemplateResolver(ClassLoaderTemplateResolver().apply {
+            prefix = "templates/"
+            suffix = ".html"
+            templateMode = TemplateMode.HTML
+            characterEncoding = "UTF-8"
+        })
+    }
     installErrorHandler(config.errorConfig)
 
     config.securityConfig?.let { sec ->
@@ -85,7 +98,7 @@ fun Application.module(config: KtoriteConfig) {
             config.db = database
             if (config.models.isNotEmpty()) {
                 transaction(database) {
-                    SchemaUtils.create(*config.models.toTypedArray())
+                    SchemaUtils.createMissingTablesAndColumns(*config.models.toTypedArray())
                 }
             }
             if (config.migrations.isNotEmpty()) {
@@ -120,17 +133,6 @@ fun Application.module(config: KtoriteConfig) {
                 }
             }
         }
-        val adminAuthEnabled = config.adminUsername != null && config.adminPassword != null
-        if (adminAuthEnabled) {
-            basic("admin-basic") {
-                validate { credentials ->
-                    if (credentials.name == config.adminUsername && credentials.password == config.adminPassword) {
-                        UserIdPrincipal(credentials.name)
-                    } else null
-                }
-                realm = "Ktorite Admin"
-            }
-        }
         config.authConfig?.sessionConfig?.let {
             session<org.ktorite.auth.UserSession>("session") {
                 validate { session ->
@@ -142,10 +144,19 @@ fun Application.module(config: KtoriteConfig) {
 
     routing {
         if (config.enableAdmin && db != null) {
-            val adminAuth = config.adminUsername != null && config.adminPassword != null
-            if (adminAuth) {
-                authenticate("admin-basic") { installAdmin(config.models, db) }
-            } else {
+            val sessionCfg = config.authConfig?.sessionConfig
+            require(sessionCfg != null) {
+                "Admin panel requires session auth. Configure auth { session { ... } }"
+            }
+            get("/admin") {
+                val session = call.sessions.get<org.ktorite.auth.UserSession>()
+                if (session == null) {
+                    call.respond(ThymeleafContent("admin/login", mapOf("loginPath" to sessionCfg.loginPath)))
+                } else {
+                    call.respond(ThymeleafContent("admin/index", mapOf("models" to config.models, "modelCount" to config.models.size)))
+                }
+            }
+            authenticate("session") {
                 installAdmin(config.models, db)
             }
         }

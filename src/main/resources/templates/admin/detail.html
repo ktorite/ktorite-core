@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title th:text="${title}">Detail</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem;
+      background: #eff1f5;
+      color: #4c4f69;
+    }
+
+    nav {
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      color: #6c6f85;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #1e66f5;
+    }
+
+    nav span {
+      color: #4c4f69;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #eff1f5;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid #dce0e8;
+    }
+
+    th {
+      background: #e6e9ef;
+      color: #4c4f69;
+      width: 30%;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .btn-primary {
+      background: #1e66f5;
+      color: #fff;
+    }
+
+    .actions {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="/admin">Home</a>
+    › <a th:href="${'/admin/' + modelName}" th:text="${modelName}">x</a>
+    › <span th:text="${pkVal}">x</span>
+  </nav>
+  <h1 th:text="${title}">Detail</h1>
+  <table>
+    <tr th:each="col : ${columns}">
+      <th th:text="${col}">col</th>
+      <td th:text="${row.get(col)}">val</td>
+    </tr>
+  </table>
+  <div class="actions">
+    <a th:href="${'/admin/' + modelName + '/' + pkVal + '/edit'}" class="btn btn-primary">Edit</a>
+    <a th:href="${'/admin/' + modelName}" class="btn">Back</a>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title th:text="${title}">Form</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem;
+      background: #eff1f5;
+      color: #4c4f69;
+    }
+
+    nav {
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      color: #6c6f85;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #1e66f5;
+    }
+
+    nav span {
+      color: #4c4f69;
+      font-weight: 600;
+    }
+
+    form label {
+      display: block;
+      margin: 0.5rem 0 0.25rem;
+      font-weight: 600;
+      color: #4c4f69;
+    }
+
+    form input,
+    form textarea,
+    form select {
+      width: 100%;
+      padding: 0.4rem;
+      border: 1px solid #bcc0cc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      background: #eff1f5;
+      color: #4c4f69;
+    }
+
+    form input[type=checkbox] {
+      width: auto;
+    }
+
+    form textarea {
+      min-height: 80px;
+    }
+
+    form input[readonly] {
+      background: #e6e9ef;
+    }
+
+    form .actions {
+      margin-top: 1rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .btn-primary {
+      background: #1e66f5;
+      color: #fff;
+    }
+
+    .alert-danger {
+      background: #e6e9ef;
+      color: #d20f39;
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="/admin">Home</a>
+    › <a th:href="${'/admin/' + modelName}" th:text="${modelName}">x</a>
+    <th:block th:if="${isEdit}"> › <a th:href="${'/admin/' + modelName + '/' + pkVal}" th:text="${pkVal}">x</a> ›
+      <span>Edit</span>
+    </th:block>
+    <th:block th:unless="${isEdit}"> › <span>New</span></th:block>
+  </nav>
+  <h1 th:text="${title}">Form</h1>
+  <th:block th:if="${error != null}">
+    <div class="alert-danger" th:text="${error}">error</div>
+  </th:block>
+  <form method="post" th:action="${action}">
+    <input type="hidden" name="csrf_token" th:value="${csrfToken}">
+    <th:block th:each="field : ${fields}">
+      <label th:text="${field.name}">field</label>
+      <th:block th:if="${field.type == 'boolean'}">
+        <input type="checkbox" name="true"
+          th:attr="name=${field.name}, checked=${field.value == true ? 'checked' : null}"
+          th:readonly="${field.readonly ? 'readonly' : null}">
+      </th:block>
+      <th:block th:if="${field.type == 'textarea'}">
+        <textarea th:attr="name=${field.name}, readonly=${field.readonly ? 'readonly' : null}"
+          th:text="${field.value}"></textarea>
+      </th:block>
+      <th:block th:if="${field.type == 'number'}">
+        <input type="number"
+          th:attr="name=${field.name}, value=${field.value}, readonly=${field.readonly ? 'readonly' : null}">
+      </th:block>
+      <th:block th:if="${field.type == 'decimal'}">
+        <input type="number" step="any"
+          th:attr="name=${field.name}, value=${field.value}, readonly=${field.readonly ? 'readonly' : null}">
+      </th:block>
+      <th:block th:if="${field.type == 'text'}">
+        <input type="text"
+          th:attr="name=${field.name}, value=${field.value}, readonly=${field.readonly ? 'readonly' : null}">
+      </th:block>
+    </th:block>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">Save</button>
+      <a th:href="${'/admin/' + modelName}" class="btn">Cancel</a>
+    </div>
+  </form>
+</body>
+
+</html>

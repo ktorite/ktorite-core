@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title th:text="${title}">List</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem;
+      background: #eff1f5;
+      color: #4c4f69;
+    }
+
+    nav {
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      color: #6c6f85;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #1e66f5;
+    }
+
+    nav span {
+      color: #4c4f69;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #eff1f5;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid #dce0e8;
+    }
+
+    th {
+      background: #e6e9ef;
+      color: #4c4f69;
+    }
+
+    tr:hover {
+      background: #ccd0da;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .btn-primary {
+      background: #1e66f5;
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: #d20f39;
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .pagination {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .alert {
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+
+    .alert-info {
+      background: #e6e9ef;
+      color: #1e66f5;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="/admin">Home</a>
+    › <span th:text="${modelName}">x</span>
+  </nav>
+  <h1 th:text="${title}">List</h1>
+  <a th:href="${'/admin/' + modelName + '/new'}" class="btn btn-primary">+ New</a>
+  <table>
+    <thead>
+      <tr>
+        <th th:each="col : ${columns}" th:text="${col}">col</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="row : ${rows}">
+        <td th:each="col : ${columns}" th:text="${row.get(col)}">val</td>
+        <td>
+          <a th:href="${'/admin/' + modelName + '/' + row.get(pkCol)}" class="btn btn-sm">View</a>
+          <a th:href="${'/admin/' + modelName + '/' + row.get(pkCol) + '/edit'}" class="btn btn-sm btn-primary">Edit</a>
+          <form th:action="${'/admin/' + modelName + '/' + row.get(pkCol) + '/delete'}" method="post"
+            style="display:inline" onsubmit="return confirm('Delete?')">
+            <input type="hidden" name="csrf_token" th:value="${csrfToken}">
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <th:block th:if="${totalPages > 1}">
+    <div class="pagination">
+      <span th:text="${'Page ' + page + ' of ' + totalPages + ' (' + total + ' total)'}"></span>
+      <a th:if="${hasPrev}" th:href="${'/admin/' + modelName + '?page=' + prevPage + '&per_page=' + perPage}"
+        class="btn btn-sm">Previous</a>
+      <a th:if="${hasNext}" th:href="${'/admin/' + modelName + '?page=' + nextPage + '&per_page=' + perPage}"
+        class="btn btn-sm btn-primary">Next</a>
+    </div>
+  </th:block>
+</body>
+
+</html>
