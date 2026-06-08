@@ -3,9 +3,6 @@ package org.ktorite
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.*
-import io.ktor.server.thymeleaf.Thymeleaf
-import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver
-import org.thymeleaf.templatemode.TemplateMode
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.routing.*
@@ -16,14 +13,10 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.csrf.CSRF
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.hsts.HSTS
-import io.ktor.http.*
-import io.ktor.server.response.*
 import io.ktor.server.sessions.*
-import io.ktor.server.thymeleaf.ThymeleafContent
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.ktorite.Routing.installRoutes
-import org.ktorite.admin.installAdmin
+import org.ktorite.admin.AdminPanel
 import org.ktorite.auth.installSessionAuth
 import org.ktorite.config.KtoriteConfig
 import org.ktorite.db.installDatabase
@@ -46,15 +39,7 @@ fun Application.module(config: KtoriteConfig) {
     configureSerialization()
     install(CallLogging)
     install(DefaultHeaders)
-    install(Thymeleaf) {
-        addTemplateResolver(ClassLoaderTemplateResolver().apply {
-            prefix = "templates/"
-            suffix = ".html"
-            templateMode = TemplateMode.HTML
-            characterEncoding = "UTF-8"
-        })
-    }
-    installErrorHandler(config.errorConfig)
+    installErrorHandler(config.developmentMode)
 
     config.securityConfig?.let { sec ->
         if (sec.csrfConfig.disabled != true) {
@@ -143,22 +128,18 @@ fun Application.module(config: KtoriteConfig) {
     }
 
     routing {
-        if (config.enableAdmin && db != null) {
+        if (config.developmentMode && db != null) {
             val sessionCfg = config.authConfig?.sessionConfig
             require(sessionCfg != null) {
-                "Admin panel requires session auth. Configure auth { session { ... } }"
+                "Development mode with admin requires session auth. Configure auth { session { ... } }"
             }
-            get("/admin") {
-                val session = call.sessions.get<org.ktorite.auth.UserSession>()
-                if (session == null) {
-                    call.respond(ThymeleafContent("admin/login", mapOf("loginPath" to sessionCfg.loginPath)))
-                } else {
-                    call.respond(ThymeleafContent("admin/index", mapOf("models" to config.models, "modelCount" to config.models.size)))
-                }
+            val adminPanel = try {
+                val clazz = Class.forName("org.ktorite.admin.KtoriteAdminPanel")
+                clazz.getDeclaredConstructor().newInstance() as AdminPanel
+            } catch (_: ClassNotFoundException) {
+                error("Admin panel requires ktorite-admin on classpath.")
             }
-            authenticate("session") {
-                installAdmin(config.models, db)
-            }
+            adminPanel.install(application, config.models, db, sessionCfg.loginPath)
         }
         config.routes.forEach { it() }
     }
