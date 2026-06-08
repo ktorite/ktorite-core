@@ -5,12 +5,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.respondText
-import org.ktorite.config.ErrorConfig
 
-fun Application.installErrorHandler(config: ErrorConfig) {
+fun Application.installErrorHandler(developmentMode: Boolean) {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            val msg = if (config.developmentMode) {
+            val msg = if (developmentMode) {
                 (cause.cause?.message ?: cause.message) ?: "Internal server error"
             } else {
                 "Internal server error"
