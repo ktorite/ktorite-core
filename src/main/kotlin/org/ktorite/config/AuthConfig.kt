@@ -41,4 +41,5 @@ class SessionAuthConfig {
     var maxAge: Duration = 24.hours
     var onLogin: (suspend (ApplicationCall) -> Unit)? = null
     var onLogout: (suspend (ApplicationCall) -> Unit)? = null
+    var requireSuperuser: Boolean = true
 }

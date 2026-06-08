@@ -10,8 +10,6 @@ import org.ktorite.migration.Migration
 class KtoriteConfig {
     var port: Int = 8080
     var enableAdmin: Boolean = false
-    var adminUsername: String? = null
-    var adminPassword: String? = null
     var dbConfig: DbConfig? = null
     var authConfig: AuthConfig? = null
     var securityConfig: SecurityConfig? = null

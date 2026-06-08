@@ -69,10 +69,18 @@ fun Application.installSessionAuth(config: SessionAuthConfig, db: Database) {
                 return@post
             }
 
+            if (config.requireSuperuser && userTable is UserTable) {
+                val isSuper = row[UserTable.isSuperuser]
+                if (isSuper != true) {
+                    call.respondText("Not authorized", status = HttpStatusCode.Forbidden)
+                    return@post
+                }
+            }
+
             call.sessions.set(UserSession(row[idCol] as Int, row[usernameCol] as String))
             config.onLogin?.invoke(call)
             if (!call.response.isCommitted) {
-                call.respondText("Logged in", status = HttpStatusCode.OK)
+                call.respondRedirect("/admin")
             }
         }
 
@@ -80,7 +88,7 @@ fun Application.installSessionAuth(config: SessionAuthConfig, db: Database) {
             call.sessions.clear<UserSession>()
             config.onLogout?.invoke(call)
             if (!call.response.isCommitted) {
-                call.respondText("Logged out", status = HttpStatusCode.OK)
+                call.respondRedirect("/admin")
             }
         }
     }
