@@ -14,9 +14,9 @@ import io.ktor.server.plugins.csrf.CSRF
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.sessions.*
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.ktorite.admin.AdminPanel
 import org.ktorite.auth.installSessionAuth
 import org.ktorite.config.KtoriteConfig
 import org.ktorite.db.installDatabase
@@ -133,13 +133,13 @@ fun Application.module(config: KtoriteConfig) {
             require(sessionCfg != null) {
                 "Development mode with admin requires session auth. Configure auth { session { ... } }"
             }
-            val adminPanel = try {
+            try {
                 val clazz = Class.forName("org.ktorite.admin.KtoriteAdminPanel")
-                clazz.getDeclaredConstructor().newInstance() as AdminPanel
+                val method = clazz.getMethod("install", Application::class.java, List::class.java, Database::class.java, String::class.java, String::class.java)
+                method.invoke(null, application, config.models, db, sessionCfg.loginPath, sessionCfg.sessionName)
             } catch (_: ClassNotFoundException) {
                 error("Admin panel requires ktorite-admin on classpath.")
             }
-            adminPanel.install(application, config.models, db, sessionCfg.loginPath)
         }
         config.routes.forEach { it() }
     }
