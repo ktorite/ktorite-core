@@ -18,6 +18,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url = uri("https://packages.confluent.io/maven/") }
+    maven("https://jitpack.io")
 }
 kotlin {
     jvmToolchain(17)
