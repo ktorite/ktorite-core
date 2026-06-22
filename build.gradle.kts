@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.ktorite"
-version = "1.0.0"
+version = "1.0.1"
 
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     enabled = false
@@ -29,7 +29,7 @@ publishing {
             from(components["java"])
             groupId = "com.github.ktorite"
             artifactId = "ktorite-core"
-            version = "1.0.0"
+            version = "1.0.1"
         }
     }
 }
@@ -63,7 +63,7 @@ dependencies {
     api(libs.ktor.client.core)
     api(libs.ktor.server.auth.jwt)
     api(libs.ktor.server.compression)
-    implementation("com.github.ktorite:ktorite-admin:v1.0.0")
+    implementation("com.github.ktorite:ktorite-admin:v1.0.1")
     api(libs.ktor.simple.cache)
     api(libs.ktor.simple.memory.cache)
     api(libs.ktor.simple.redis.cache)
