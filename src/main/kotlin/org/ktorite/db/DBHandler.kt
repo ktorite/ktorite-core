@@ -31,6 +31,9 @@ fun Application.installDatabase(config: DbConfig): Database {
         validate()
     }
     val dataSource = HikariDataSource(hikariConfig)
+    monitor.subscribe(ApplicationStopping) {
+        dataSource.close()
+    }
     val db = Database.connect(dataSource)
     log.info("Database connected: ${config.url}")
     return db

@@ -32,7 +32,7 @@ fun Application.installSessionAuth(config: SessionAuthConfig, db: Database) {
             cookie.maxAgeInSeconds = config.maxAge.inWholeSeconds
             cookie.sameSite = SameSite.Lax
             cookie.httpOnly = true
-            cookie.secure = false
+            cookie.secure = config.secure
         }
     }
 

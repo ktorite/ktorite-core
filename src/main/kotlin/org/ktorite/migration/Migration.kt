@@ -32,7 +32,7 @@ internal fun runMigrations(db: Database, migrations: List<Migration>) {
             transaction(db) {
                 migration.up(this)
                 val now = Instant.now().toString()
-                exec("INSERT INTO _ktorite_migrations (name, applied_at) VALUES (?, ?)", listOf(MigrationTable.name.columnType to migration.name, MigrationTable.appliedAt.columnType to now))
+                exec("INSERT INTO ${MigrationTable.tableName} (name, applied_at) VALUES (?, ?)", listOf(MigrationTable.name.columnType to migration.name, MigrationTable.appliedAt.columnType to now))
             }
         }
     }

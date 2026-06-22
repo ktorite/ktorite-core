@@ -8,6 +8,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.websocket.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.csrf.CSRF
@@ -127,6 +128,10 @@ fun Application.module(config: KtoriteConfig) {
         }
     }
 
+    if (config.webSocketConfigs.isNotEmpty()) {
+        install(WebSockets)
+    }
+
     routing {
         if (config.developmentMode && db != null) {
             val sessionCfg = config.authConfig?.sessionConfig
@@ -142,5 +147,6 @@ fun Application.module(config: KtoriteConfig) {
             }
         }
         config.routes.forEach { it() }
+        config.webSocketConfigs.forEach { it() }
     }
 }
